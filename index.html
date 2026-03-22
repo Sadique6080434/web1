@@ -2,34 +2,22 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Azure VM 3D Animation</title>
+  <title>Real VM 3D View</title>
   <style>
     body {
       margin: 0;
       overflow: hidden;
       background: #0b1c2c;
-      font-family: Arial;
-    }
-
-    #label {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      color: #00aaff;
-      font-size: 20px;
     }
   </style>
 </head>
 <body>
-
-<div id="label">Azure Virtual Machine</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
 
 <script>
   // Scene
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0b1c2c);
 
   // Camera
   const camera = new THREE.PerspectiveCamera(
@@ -45,52 +33,49 @@
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
-  // Lights
-  const light = new THREE.PointLight(0x00aaff, 2);
+  // Light
+  const light = new THREE.PointLight(0xffffff, 1.5);
   light.position.set(5, 5, 5);
   scene.add(light);
 
-  const ambient = new THREE.AmbientLight(0x404040);
-  scene.add(ambient);
+  // Load Real VM Image Texture
+  const textureLoader = new THREE.TextureLoader();
+  const texture = textureLoader.load(
+    "https://images.unsplash.com/photo-1587202372775-e229f172b9d7"
+  ); // server rack image
 
-  // VM Cube (Server)
-  const geometry = new THREE.BoxGeometry(2, 2, 2);
-  const material = new THREE.MeshStandardMaterial({
-    color: 0x007fff,
-    metalness: 0.7,
-    roughness: 0.2
+  // Create Plane (like screen)
+  const geometry = new THREE.PlaneGeometry(4, 3);
+  const material = new THREE.MeshBasicMaterial({ map: texture });
+
+  const plane = new THREE.Mesh(geometry, material);
+  scene.add(plane);
+
+  // Optional: Add slight 3D depth (box behind)
+  const boxGeo = new THREE.BoxGeometry(4, 3, 0.3);
+  const boxMat = new THREE.MeshStandardMaterial({
+    color: 0x111111,
+    metalness: 0.6,
+    roughness: 0.4
   });
 
-  const cube = new THREE.Mesh(geometry, material);
-  scene.add(cube);
+  const box = new THREE.Mesh(boxGeo, boxMat);
+  box.position.z = -0.2;
+  scene.add(box);
 
-  // Glow effect
-  const glowGeometry = new THREE.BoxGeometry(2.2, 2.2, 2.2);
-  const glowMaterial = new THREE.MeshBasicMaterial({
-    color: 0x00aaff,
-    transparent: true,
-    opacity: 0.2
-  });
-
-  const glow = new THREE.Mesh(glowGeometry, glowMaterial);
-  scene.add(glow);
-
-  // Animation loop
+  // Animation
   function animate() {
     requestAnimationFrame(animate);
 
-    cube.rotation.x += 0.01;
-    cube.rotation.y += 0.01;
-
-    glow.rotation.x = cube.rotation.x;
-    glow.rotation.y = cube.rotation.y;
+    plane.rotation.y += 0.005;
+    box.rotation.y += 0.005;
 
     renderer.render(scene, camera);
   }
 
   animate();
 
-  // Responsive
+  // Resize
   window.addEventListener("resize", () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
